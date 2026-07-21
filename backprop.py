@@ -74,7 +74,7 @@ st.set_page_config(page_title="Manual Neural Net from Scratch", layout="centered
 
 st.title("Neural Network Built From Scratch (NumPy Only)")
 st.caption(
-    "A 2 → 2 → 1 network (no ML framework) predicting LPA from CGPA and profile score. "
+    "A 2 -> 2 -> 1 network (no ML framework) predicting LPA from CGPA and profile score. "
     "Forward pass and backpropagation are both hand-written — this app trains it live."
 )
 
