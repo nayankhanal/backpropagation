@@ -125,12 +125,12 @@ if "history" in st.session_state:
     st.subheader("Learned parameters")
     pcol1, pcol2 = st.columns(2)
     with pcol1:
-        st.markdown("**W1** (input → hidden)")
+        st.markdown("**W1** (input -> hidden)")
         st.write(parameters["W1"])
         st.markdown("**b1**")
         st.write(parameters["b1"])
     with pcol2:
-        st.markdown("**W2** (hidden → output)")
+        st.markdown("**W2** (hidden -> output)")
         st.write(parameters["W2"])
         st.markdown("**b2**")
         st.write(parameters["b2"])
