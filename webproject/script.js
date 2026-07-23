@@ -1,11 +1,11 @@
-// Backpropagation scrollytelling clone
-// The SVG network is fully re-rendered on each scroll step from a per-step config.
+// Backpropagation scrollytelling — dark "neural lab" build.
+// The SVG network is re-rendered per scroll step from a config table.
 
 const SVG = "http://www.w3.org/2000/svg";
 const svg = document.getElementById("net");
 
-const W = 70;   // node width
-const SH = 26;  // segment height
+const W = 70;
+const SH = 26;
 
 const NODES = {
   n6: { cx: 200, cy: 130, num: 6, yLabel: "y_output", xLabel: "x6" },
@@ -30,18 +30,12 @@ const EDGES = [
 const E_NODE = { cx: 380, cy: 130 };
 const TARGET = { cx: 380, cy: 880 };
 
-const COL = {
-  y:    { solid: "#e06666", pale: "#f4cccc" },
-  x:    { solid: "#4a90d9", pale: "#cfe2f3" },
-  dedy: { solid: "#6aa84f", pale: "#d9ead3" },
-  dedx: { solid: "#e69138", pale: "#fce5cd" },
-};
-const DW = { solid: "#8e7cc3", pale: "#ede8f6" };
+// luminous semantic palette (works on dark and light); pale = same hue, low alpha
+const COL = { y: "#fb7185", x: "#38bdf8", dedy: "#4ade80", dedx: "#fbbf24" };
+const DW = "#c084fc";
+const PALE = "26"; // ~15% alpha hex suffix
+const INK = "#0b0e13"; // text on a solid luminous fill
 
-// Per-step configuration. mode: hidden | plain | stacked | backprop.
-// filled: "all" or list of node ids that show solid (reached in forward pass).
-// dw / de: "pale" | "solid" (base level); solidDw / solidDe promote specific keys.
-// hi: keys to blink. hiDw:"all" / hiDe:"all" blink every dw box / every de segment.
 const STEPS = {
   1:  { mode: "hidden" },
   2:  { mode: "plain" },
@@ -72,9 +66,8 @@ function el(tag, attrs = {}, text) {
   return n;
 }
 
-// Text with a numeric / word subscript split out (e.g. "y_output", "x6", "dE/dy4").
-function subText(x, y, str, fill, anchor = "middle", size = 12) {
-  const t = el("text", { x, y, "text-anchor": anchor, "font-size": size, fill });
+function subText(x, y, str, colorCss, anchor = "middle", size = 12) {
+  const t = el("text", { x, y, "text-anchor": anchor, "font-size": size, style: "fill:" + colorCss });
   const m = str.match(/^(.*?)(_input|_output|_target|\d+)$/);
   if (m) {
     t.appendChild(el("tspan", {}, m[1]));
@@ -89,7 +82,6 @@ function isFilled(cfg, id) {
   return cfg.filled === "all" || (Array.isArray(cfg.filled) && cfg.filled.includes(id));
 }
 
-// Build the stacked segment list for a node given the mode.
 function nodeSegs(id, cfg) {
   const node = NODES[id];
   const segs = [{ key: "y:" + id, kind: "y", label: node.yLabel }];
@@ -114,14 +106,27 @@ function nodeGeom(id, cfg) {
   return { segs, h, top, bottom: top + h };
 }
 
-function segFill(kind, id, cfg, solidSet) {
-  if (kind === "blank") return "#fff";
-  if (kind === "y") return COL.y[isFilled(cfg, id) ? "solid" : "pale"];
-  if (kind === "x") return COL.x[isFilled(cfg, id) ? "solid" : "pale"];
-  // dedy / dedx
-  const base = cfg.de === "solid" ? "solid" : "pale";
-  const level = base === "solid" || solidSet.has(kind + ":" + id) ? "solid" : "pale";
-  return COL[kind][level];
+// returns {fill, solid} for a segment
+function segStyle(kind, id, cfg, solidSet) {
+  if (kind === "blank") return { fill: "var(--bg-elev)", solid: false };
+  if (kind === "y") { const s = isFilled(cfg, id); return { fill: s ? COL.y : COL.y + PALE, solid: s }; }
+  if (kind === "x") { const s = isFilled(cfg, id); return { fill: s ? COL.x : COL.x + PALE, solid: s }; }
+  const solid = cfg.de === "solid" || solidSet.has(kind + ":" + id);
+  return { fill: solid ? COL[kind] : COL[kind] + PALE, solid };
+}
+
+// which edges show a flowing signal, and in which direction
+function flowFor(cfg, step) {
+  const map = {};
+  if (step >= 5 && step <= 8) {
+    for (const e of EDGES) if (isFilled(cfg, e.from)) map[e.label] = "up";
+  } else if (step >= 11) {
+    for (const e of EDGES) {
+      if (step >= 15) map[e.label] = "down";
+      else if ((cfg.solidDw || []).includes(e.label)) map[e.label] = "down";
+    }
+  }
+  return map;
 }
 
 function render(step) {
@@ -132,28 +137,31 @@ function render(step) {
   const geom = {};
   for (const id in NODES) geom[id] = nodeGeom(id, cfg);
 
-  // set of keys to blink
   const hi = new Set(cfg.hi || []);
   if (cfg.hiDw === "all") EDGES.forEach((e) => hi.add("dw:" + e.label));
   if (cfg.hiDe === "all")
     ["n6", "n4", "n5", "n2", "n3"].forEach((id) => { hi.add("dedy:" + id); hi.add("dedx:" + id); });
   const solidDe = new Set(cfg.solidDe || []);
   const solidDw = new Set(cfg.solidDw || []);
+  const flow = flowFor(cfg, step);
 
-  // ---- edges ----
+  // ---- edges (+ flowing signal overlay) ----
   for (const e of EDGES) {
     const a = NODES[e.from], b = NODES[e.to];
     const x1 = a.cx, y1 = geom[e.from].top;
     const x2 = b.cx, y2 = geom[e.to].bottom;
     svg.appendChild(el("line", { x1, y1, x2, y2, class: "edge" }));
+    if (flow[e.label])
+      svg.appendChild(el("line", { x1, y1, x2, y2,
+        class: "flow" + (flow[e.label] === "down" ? " rev" : "") }));
     const lx = x1 + (x2 - x1) * 0.34, ly = y1 + (y2 - y1) * 0.34;
     if (hi.has("wl:" + e.label))
       svg.appendChild(el("rect", { x: lx - 15, y: ly - 12, width: 30, height: 18, rx: 2,
-        fill: "#fff", class: "blink" }));
-    svg.appendChild(subText(lx, ly, e.label, "#666", "middle", 12));
+        fill: "var(--bg-elev)", class: "blink" }));
+    svg.appendChild(subText(lx, ly, e.label, "var(--text-dim)", "middle", 12));
   }
 
-  // arrows to E (E only exists once the error function is introduced)
+  // arrows to E
   if (cfg.ends) {
     svg.appendChild(el("line", { x1: NODES.n6.cx + W / 2, y1: NODES.n6.cy,
       x2: E_NODE.cx - 16, y2: E_NODE.cy, class: "edge" }));
@@ -167,11 +175,11 @@ function render(step) {
       const a = NODES[e.from], b = NODES[e.to];
       const mx = (a.cx + b.cx) / 2, my = (geom[e.from].top + geom[e.to].bottom) / 2;
       const solid = cfg.dw === "solid" || solidDw.has(e.label);
-      const cls = "seg" + (hi.has("dw:" + e.label) ? " blink" : "");
-      svg.appendChild(el("rect", { x: mx - 22, y: my - 11, width: 44, height: 22, rx: 2,
-        fill: DW[solid ? "solid" : "pale"], stroke: "#8e7cc3", "stroke-width": "1", class: cls }));
+      const cls = "nseg" + (hi.has("dw:" + e.label) ? " blink" : "");
+      svg.appendChild(el("rect", { x: mx - 22, y: my - 11, width: 44, height: 22, rx: 3,
+        fill: solid ? DW : DW + PALE, stroke: DW, "stroke-width": "1", class: cls }));
       svg.appendChild(el("text", { x: mx, y: my + 4, "text-anchor": "middle",
-        "font-size": "11", fill: solid ? "#fff" : "#5b4a9e" }, "dE/dw"));
+        "font-size": "11", style: "fill:" + (solid ? INK : "var(--text-dim)") }, "dE/dw"));
     }
   }
 
@@ -180,62 +188,121 @@ function render(step) {
     const node = NODES[id], g = geom[id];
 
     if (g.plain) {
-      svg.appendChild(el("rect", { x: node.cx - W / 2, y: g.top, width: W, height: g.h, rx: 3,
-        fill: "#fff", stroke: "#888", "stroke-width": "1.2" }));
+      svg.appendChild(el("rect", { x: node.cx - W / 2, y: g.top, width: W, height: g.h, rx: 4,
+        fill: "var(--bg-elev)", class: "nborder" }));
       svg.appendChild(el("text", { x: node.cx, y: node.cy + 7, "text-anchor": "middle",
-        "font-size": "22", fill: "#333" }, String(node.num)));
+        "font-size": "22", style: "fill:var(--text)" }, String(node.num)));
       continue;
     }
 
     g.segs.forEach((s, i) => {
       const y = g.top + i * SH;
-      const fill = segFill(s.kind, id, cfg, solidDe);
-      const solidText = (s.kind === "y" || s.kind === "x") ? isFilled(cfg, id)
-        : (cfg.de === "solid" || solidDe.has(s.kind + ":" + id));
-      const cls = "seg" + (hi.has(s.key) ? " blink" : "");
+      const st = segStyle(s.kind, id, cfg, solidDe);
+      const cls = "nseg" + (hi.has(s.key) ? " blink" : "");
       svg.appendChild(el("rect", { x: node.cx - W / 2, y, width: W, height: SH,
-        fill, stroke: "#9a9a9a", "stroke-width": "1", class: cls }));
+        fill: st.fill, class: cls }));
       if (s.label)
-        svg.appendChild(subText(node.cx, y + SH / 2 + 4, s.label, solidText ? "#fff" : "#333"));
+        svg.appendChild(subText(node.cx, y + SH / 2 + 4, s.label, st.solid ? INK : "var(--text-dim)"));
     });
 
-    // outer border
-    svg.appendChild(el("rect", { x: node.cx - W / 2, y: g.top, width: W, height: g.h, rx: 3,
-      fill: "none", stroke: "#666", "stroke-width": "1.2" }));
+    svg.appendChild(el("rect", { x: node.cx - W / 2, y: g.top, width: W, height: g.h, rx: 4,
+      class: "nborder" }));
 
-    // activation circle (not on the input node)
     if (id !== "n1") {
       const fy = g.bottom - SH;
-      svg.appendChild(el("circle", { cx: node.cx - W / 2, cy: fy, r: 10,
-        fill: "#fff", stroke: "#666", "stroke-width": "1" }));
+      svg.appendChild(el("circle", { cx: node.cx - W / 2, cy: fy, r: 10, class: "fc" }));
       svg.appendChild(el("text", { x: node.cx - W / 2, y: fy + 4, "text-anchor": "middle",
-        "font-size": "11", "font-style": "italic", fill: "#333" }, "f"));
+        "font-size": "11", "font-style": "italic", style: "fill:var(--text-dim)" }, "f"));
     }
   }
 
-  // ---- E node & y_target (only after the error function is introduced) ----
+  // ---- E node & y_target ----
   if (cfg.ends) {
-    svg.appendChild(el("circle", { cx: E_NODE.cx, cy: E_NODE.cy, r: 16,
-      fill: "#fff", stroke: "#666", "stroke-width": "1.2" }));
+    svg.appendChild(el("circle", { cx: E_NODE.cx, cy: E_NODE.cy, r: 16, class: "ecirc" }));
     svg.appendChild(el("text", { x: E_NODE.cx, y: E_NODE.cy + 5, "text-anchor": "middle",
-      "font-size": "14", fill: "#333" }, "E"));
-    const cls = "seg" + (hi.has("target") ? " blink" : "");
+      "font-size": "14", style: "fill:var(--text)" }, "E"));
+    const cls = "nseg" + (hi.has("target") ? " blink" : "");
     svg.appendChild(el("rect", { x: TARGET.cx - W / 2, y: TARGET.cy - SH / 2, width: W, height: SH,
-      rx: 3, fill: COL.y.solid, stroke: "#666", "stroke-width": "1.2", class: cls }));
-    svg.appendChild(subText(TARGET.cx, TARGET.cy + 4, "y_target", "#fff"));
+      rx: 3, fill: COL.y, class: cls }));
+    svg.appendChild(subText(TARGET.cx, TARGET.cy + 4, "y_target", INK));
   }
 }
 
-// ---- scroll driver ----
-const steps = Array.from(document.querySelectorAll(".step"));
-let current = -1;
+// ---- side rail ----
+const RAIL_TITLES = {
+  1: "Intro", 2: "Network", 3: "Activation", 4: "Error function",
+  5: "Forward: input", 6: "Forward: hidden", 7: "Forward: activate", 8: "Forward: output",
+  9: "Update rule", 10: "Store derivatives", 11: "Back: output", 12: "Back: chain rule",
+  13: "Back: weights", 14: "Back: full circle", 15: "Back: repeat", 16: "The end",
+};
+const PHASES = {
+  2: "Setup", 3: "Setup", 4: "Setup",
+  5: "Forward pass", 6: "Forward pass", 7: "Forward pass", 8: "Forward pass",
+  9: "Gradients", 10: "Gradients",
+  11: "Backward pass", 12: "Backward pass", 13: "Backward pass", 14: "Backward pass",
+  15: "Backward pass", 16: "Done",
+};
 
+const steps = Array.from(document.querySelectorAll(".step"));
+const railButtons = {};
+
+(function buildChrome() {
+  // step kickers ("STEP 03 · Forward pass")
+  steps.forEach((sec) => {
+    const n = Number(sec.dataset.step);
+    if (n === 1) return;
+    const h2 = sec.querySelector("h2");
+    if (!h2) return;
+    const k = document.createElement("p");
+    k.className = "kicker";
+    k.textContent = "Step " + String(n - 1).padStart(2, "0") + " · " + PHASES[n];
+    h2.parentNode.insertBefore(k, h2);
+  });
+
+  // rail dots
+  const rail = document.getElementById("rail");
+  steps.forEach((sec) => {
+    const n = Number(sec.dataset.step);
+    const b = document.createElement("button");
+    b.dataset.title = RAIL_TITLES[n];
+    b.addEventListener("click", () => sec.scrollIntoView({ behavior: "smooth", block: "center" }));
+    rail.appendChild(b);
+    railButtons[n] = b;
+  });
+
+  // theme toggle
+  const btn = document.getElementById("themeBtn");
+  const saved = localStorage.getItem("bp-theme");
+  if (saved === "light") { document.documentElement.setAttribute("data-theme", "light"); btn.textContent = "Dark"; }
+  btn.addEventListener("click", () => {
+    const light = document.documentElement.getAttribute("data-theme") === "light";
+    if (light) { document.documentElement.removeAttribute("data-theme"); btn.textContent = "Light"; localStorage.setItem("bp-theme", "dark"); }
+    else { document.documentElement.setAttribute("data-theme", "light"); btn.textContent = "Dark"; localStorage.setItem("bp-theme", "light"); }
+  });
+
+  // top scroll progress
+  const bar = document.getElementById("progressTop");
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + "%";
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+})();
+
+function setRailActive(n) {
+  for (const k in railButtons) railButtons[k].classList.toggle("active", Number(k) === n);
+}
+
+// ---- scroll driver ----
+let current = -1;
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const n = Number(entry.target.dataset.step);
         steps.forEach((s) => s.classList.toggle("active", s === entry.target));
+        setRailActive(n);
         if (n !== current) { current = n; render(n); }
       }
     });
@@ -245,26 +312,24 @@ const observer = new IntersectionObserver(
 steps.forEach((s) => observer.observe(s));
 
 render(1);
+setRailActive(1);
 
-// ---- typeset all math with KaTeX (vendored locally, works offline) ----
+// ---- typeset math with KaTeX (vendored locally, works offline) ----
 (function renderMath() {
   if (!window.katex) return;
   const macros = {
-    "\\gr": "\\textcolor{#4f8a35}",
-    "\\am": "\\textcolor{#c9791a}",
-    "\\bl": "\\textcolor{#2f74c0}",
-    "\\rd": "\\textcolor{#cf4b4b}",
-    "\\pu": "\\textcolor{#6f5bb0}",
+    "\\gr": "\\textcolor{#34d17f}",
+    "\\am": "\\textcolor{#f0b429}",
+    "\\bl": "\\textcolor{#4aa8f0}",
+    "\\rd": "\\textcolor{#fb7185}",
+    "\\pu": "\\textcolor{#b98cf5}",
   };
   document.querySelectorAll("[data-tex]").forEach((elm) => {
     try {
       katex.render(elm.getAttribute("data-tex"), elm, {
         displayMode: elm.hasAttribute("data-display"),
-        throwOnError: false,
-        macros,
+        throwOnError: false, macros,
       });
-    } catch (e) {
-      elm.textContent = elm.getAttribute("data-tex");
-    }
+    } catch (e) { elm.textContent = elm.getAttribute("data-tex"); }
   });
 })();

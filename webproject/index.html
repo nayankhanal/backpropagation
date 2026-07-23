@@ -1,126 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Backpropagation algorithm</title>
-  <link rel="stylesheet" href="katex/katex.min.css" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Backpropagation &middot; interactive explainer</title>
+    <link rel="stylesheet" href="katex/katex.min.css" />
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-  <div class="graphic">
-    <svg id="net" viewBox="0 0 460 1060" preserveAspectRatio="xMidYMid meet" aria-label="Neural network diagram"></svg>
-  </div>
+    <div class="progress-top" id="progressTop"></div>
+    <button class="theme-toggle" id="themeBtn" aria-label="Toggle color theme">Light</button>
+    <nav class="rail" id="rail" aria-label="Section navigation"></nav>
 
-  <main class="story">
+    <div class="graphic">
+        <svg id="net" viewBox="0 0 460 1060" preserveAspectRatio="xMidYMid meet" aria-label="Neural network diagram"></svg>
+    </div>
 
-    <section class="step" data-step="1">
-      <h1>Backpropagation algorithm</h1>
-      <p>The backpropagation algorithm is essential for training large neural networks quickly. This article explains how the algorithm works.</p>
-      <p class="hint">Please scroll down&hellip;</p>
-    </section>
+    <main class="story">
 
-    <section class="step" data-step="2">
-      <h2>Simple neural network</h2>
-      <p>On the right, you see a neural network with one input, one output node and two hidden layers of two nodes each.</p>
-      <p>Nodes in neighboring layers are connected with weights <span class="imath" data-tex="w_{ij}"></span>, which are the network parameters.</p>
-    </section>
+        <section class="step hero active" data-step="1">
+            <p class="kicker">Interactive explainer</p>
+            <h1>The Backpropagation Algorithm</h1>
+            <p class="tagline">How a neural network actually learns &mdash; a scroll-driven walk through the forward pass, the error, and the gradients flowing backward.</p>
+            <div class="scroll-cue"><span>Scroll to begin</span><i class="chev" aria-hidden="true"></i></div>
+        </section>
 
-    <section class="step" data-step="3">
-      <h2>Activation function</h2>
-      <p>Each node has a total input <span class="imath" data-tex="\bl{x}"></span>, an activation function <span class="imath" data-tex="f(\bl{x})"></span> and an output <span class="imath" data-tex="\rd{y} = f(\bl{x})"></span>. <span class="imath" data-tex="f(x)"></span> has to be a non-linear function, otherwise the neural network will only be able to learn linear models.</p>
-      <p>A commonly used activation function is the Sigmoid function: <span class="imath" data-tex="f(x) = \frac{1}{1 + e^{-x}}"></span>.</p>
-    </section>
+        <section class="step" data-step="2">
+            <h2>Simple neural network</h2>
+            <p>On the right, you see a neural network with one input, one output node and two hidden layers of two nodes each.</p>
+            <p>Nodes in neighboring layers are connected with weights <span class="imath" data-tex="w_{ij}"></span>, which are the network parameters.</p>
+        </section>
 
-    <section class="step" data-step="4">
-      <h2>Error function</h2>
-      <p>The goal is to learn the weights of the network automatically from data such that the predicted output <span class="imath" data-tex="\rd{y_{\text{output}}}"></span> is close to the target <span class="imath" data-tex="\rd{y_{\text{target}}}"></span> for all inputs <span class="imath" data-tex="\bl{x_{\text{input}}}"></span>.</p>
-      <p>To measure how far we are from the goal, we use an error function <strong>E</strong>. A commonly used error function is</p>
-      <div class="formula" data-display data-tex="E(\rd{y_{\text{output}}}, \rd{y_{\text{target}}}) = \tfrac{1}{2}\,(\rd{y_{\text{output}}} - \rd{y_{\text{target}}})^2"></div>
-    </section>
+        <section class="step" data-step="3">
+            <h2>Activation function</h2>
+            <p>Each node has a total input <span class="imath" data-tex="\bl{x}"></span>, an activation function <span class="imath" data-tex="f(\bl{x})"></span> and an output <span class="imath" data-tex="\rd{y} = f(\bl{x})"></span>. <span class="imath"
+                    data-tex="f(x)"></span> has to be a non-linear function, otherwise the neural network will only be able to learn linear models.</p>
+            <p>A commonly used activation function is the Sigmoid function: <span class="imath" data-tex="f(x) = \frac{1}{1 + e^{-x}}"></span>.</p>
+        </section>
 
-    <section class="step" data-step="5">
-      <h2>Forward propagation</h2>
-      <p>We begin by taking an input example (<span class="imath" data-tex="\bl{x_{\text{input}}}"></span>, <span class="imath" data-tex="\rd{y_{\text{target}}}"></span>) and updating the input layer of the network.</p>
-      <p>For consistency, we consider the input to be like any other node but without an activation function, so its output is equal to its input, i.e. <span class="imath" data-tex="\rd{y_1} = \bl{x_{\text{input}}}"></span>.</p>
-    </section>
+        <section class="step" data-step="4">
+            <h2>Error function</h2>
+            <p>The goal is to learn the weights of the network automatically from data such that the predicted output <span class="imath" data-tex="\rd{y_{\text{output}}}"></span> is close to the target <span class="imath" data-tex="\rd{y_{\text{target}}}"></span>                for all inputs <span class="imath" data-tex="\bl{x_{\text{input}}}"></span>.</p>
+            <p>To measure how far we are from the goal, we use an error function <strong>E</strong>. A commonly used error function is</p>
+            <div class="formula" data-display data-tex="E(\rd{y_{\text{output}}}, \rd{y_{\text{target}}}) = \tfrac{1}{2}\,(\rd{y_{\text{output}}} - \rd{y_{\text{target}}})^2"></div>
+        </section>
 
-    <section class="step" data-step="6">
-      <h2>Forward propagation</h2>
-      <p>Now, we update the first hidden layer. We take the output <span class="imath" data-tex="\rd{y}"></span> of the nodes in the previous layer and use the weights to compute the input <span class="imath" data-tex="\bl{x}"></span> of the nodes in the next layer.</p>
-      <div class="formula" data-display data-tex="\bl{x_j} = \sum_{i \in \mathrm{in}(j)} w_{ij}\, \rd{y_i} + b_j"></div>
-    </section>
+        <section class="step" data-step="5">
+            <h2>Forward propagation</h2>
+            <p>We begin by taking an input example (<span class="imath" data-tex="\bl{x_{\text{input}}}"></span>, <span class="imath" data-tex="\rd{y_{\text{target}}}"></span>) and updating the input layer of the network.</p>
+            <p>For consistency, we consider the input to be like any other node but without an activation function, so its output is equal to its input, i.e. <span class="imath" data-tex="\rd{y_1} = \bl{x_{\text{input}}}"></span>.</p>
+        </section>
 
-    <section class="step" data-step="7">
-      <h2>Forward propagation</h2>
-      <p>Then we update the output of the nodes in the first hidden layer. For this we use the activation function, <span class="imath" data-tex="f(x)"></span>.</p>
-      <div class="formula" data-display data-tex="\rd{y} = f(\bl{x})"></div>
-    </section>
+        <section class="step" data-step="6">
+            <h2>Forward propagation</h2>
+            <p>Now, we update the first hidden layer. We take the output <span class="imath" data-tex="\rd{y}"></span> of the nodes in the previous layer and use the weights to compute the input <span class="imath" data-tex="\bl{x}"></span> of the nodes
+                in the next layer.</p>
+            <div class="formula" data-display data-tex="\bl{x_j} = \sum_{i \in \mathrm{in}(j)} w_{ij}\, \rd{y_i} + b_j"></div>
+        </section>
 
-    <section class="step" data-step="8">
-      <h2>Forward propagation</h2>
-      <p>Using these 2 formulas we propagate for the rest of the network and get the final output of the network.</p>
-      <div class="formula" data-display data-tex="\rd{y} = f(\bl{x})"></div>
-      <div class="formula" data-display data-tex="\bl{x_j} = \sum_{i \in \mathrm{in}(j)} w_{ij}\, \rd{y_i} + b_j"></div>
-    </section>
+        <section class="step" data-step="7">
+            <h2>Forward propagation</h2>
+            <p>Then we update the output of the nodes in the first hidden layer. For this we use the activation function, <span class="imath" data-tex="f(x)"></span>.</p>
+            <div class="formula" data-display data-tex="\rd{y} = f(\bl{x})"></div>
+        </section>
 
-    <section class="step" data-step="9">
-      <h2>Error derivative</h2>
-      <p>The backpropagation algorithm decides how much to update each weight of the network after comparing the predicted output with the desired output for a particular example. For this, we need to compute how the error changes with respect to each weight <span class="imath" data-tex="\pu{\dfrac{dE}{dw_{ij}}}"></span>.</p>
-      <p>Once we have the error derivatives, we can update the weights using a simple update rule:</p>
-      <div class="formula" data-display data-tex="w_{ij} = w_{ij} - \alpha\, \pu{\dfrac{dE}{dw_{ij}}}"></div>
-      <p>where <span class="imath" data-tex="\alpha"></span> is a positive constant, the <strong>learning rate</strong>, which we fine-tune empirically.</p>
-      <p class="note">[Note] If the error goes <em>down</em> when the weight increases (<span class="imath" data-tex="\frac{dE}{dw} \lt 0"></span>), increase the weight; if the error goes <em>up</em> when the weight increases (<span class="imath" data-tex="\frac{dE}{dw} \gt 0"></span>), decrease the weight.</p>
-    </section>
+        <section class="step" data-step="8">
+            <h2>Forward propagation</h2>
+            <p>Using these 2 formulas we propagate for the rest of the network and get the final output of the network.</p>
+            <div class="formula" data-display data-tex="\rd{y} = f(\bl{x})"></div>
+            <div class="formula" data-display data-tex="\bl{x_j} = \sum_{i \in \mathrm{in}(j)} w_{ij}\, \rd{y_i} + b_j"></div>
+        </section>
 
-    <section class="step" data-step="10">
-      <h2>Additional derivatives</h2>
-      <p>To help compute <span class="imath" data-tex="\pu{\frac{dE}{dw_{ij}}}"></span>, we additionally store for each node two more derivatives &mdash; how the error changes with:</p>
-      <ul>
-        <li>the total input of the node <span class="imath" data-tex="\am{\frac{dE}{dx}}"></span>, and</li>
-        <li>the output of the node <span class="imath" data-tex="\gr{\frac{dE}{dy}}"></span>.</li>
-      </ul>
-    </section>
+        <section class="step" data-step="9">
+            <h2>Error derivative</h2>
+            <p>The backpropagation algorithm decides how much to update each weight of the network after comparing the predicted output with the desired output for a particular example. For this, we need to compute how the error changes with respect to each
+                weight <span class="imath" data-tex="\pu{\dfrac{dE}{dw_{ij}}}"></span>.</p>
+            <p>Once we have the error derivatives, we can update the weights using a simple update rule:</p>
+            <div class="formula" data-display data-tex="w_{ij} = w_{ij} - \alpha\, \pu{\dfrac{dE}{dw_{ij}}}"></div>
+            <p>where <span class="imath" data-tex="\alpha"></span> is a positive constant, the <strong>learning rate</strong>, which we fine-tune empirically.</p>
+            <p class="note">[Note] If the error goes <em>down</em> when the weight increases (<span class="imath" data-tex="\frac{dE}{dw} \lt 0"></span>), increase the weight; if the error goes <em>up</em> when the weight increases (<span class="imath" data-tex="\frac{dE}{dw} \gt 0"></span>),
+                decrease the weight.</p>
+        </section>
 
-    <section class="step" data-step="11">
-      <h2>Back propagation</h2>
-      <p>Let's begin backpropagating the error derivatives. Since we have the predicted output of this particular input example, we can compute how the error changes with that output. Given our error function <span class="imath" data-tex="E = \tfrac{1}{2}(\rd{y_{\text{output}}} - \rd{y_{\text{target}}})^2"></span> we have:</p>
-      <div class="formula" data-display data-tex="\gr{\frac{\partial E}{\partial y_{\text{output}}}} = \rd{y_{\text{output}}} - \rd{y_{\text{target}}}"></div>
-    </section>
+        <section class="step" data-step="10">
+            <h2>Additional derivatives</h2>
+            <p>To help compute <span class="imath" data-tex="\pu{\frac{dE}{dw_{ij}}}"></span>, we additionally store for each node two more derivatives &mdash; how the error changes with:</p>
+            <ul>
+                <li>the total input of the node <span class="imath" data-tex="\am{\frac{dE}{dx}}"></span>, and</li>
+                <li>the output of the node <span class="imath" data-tex="\gr{\frac{dE}{dy}}"></span>.</li>
+            </ul>
+        </section>
 
-    <section class="step" data-step="12">
-      <h2>Back propagation</h2>
-      <p>Now that we have <span class="imath" data-tex="\gr{\frac{dE}{dy}}"></span> we can get <span class="imath" data-tex="\am{\frac{dE}{dx}}"></span> using the chain rule.</p>
-      <div class="formula" data-display data-tex="\am{\frac{\partial E}{\partial x}} = \frac{dy}{dx}\, \gr{\frac{\partial E}{\partial y}} = \am{\frac{d}{dx}f(x)}\, \gr{\frac{\partial E}{\partial y}}"></div>
-      <p>where <span class="imath" data-tex="\frac{d}{dx}f(x) = f(x)\,(1 - f(x))"></span> when <span class="imath" data-tex="f(x)"></span> is the Sigmoid activation function.</p>
-    </section>
+        <section class="step" data-step="11">
+            <h2>Back propagation</h2>
+            <p>Let's begin backpropagating the error derivatives. Since we have the predicted output of this particular input example, we can compute how the error changes with that output. Given our error function <span class="imath" data-tex="E = \tfrac{1}{2}(\rd{y_{\text{output}}} - \rd{y_{\text{target}}})^2"></span>                we have:</p>
+            <div class="formula" data-display data-tex="\gr{\frac{\partial E}{\partial y_{\text{output}}}} = \rd{y_{\text{output}}} - \rd{y_{\text{target}}}"></div>
+        </section>
 
-    <section class="step" data-step="13">
-      <h2>Back propagation</h2>
-      <p>As soon as we have the error derivative with respect to the total input of a node, we can get the error derivative with respect to the weights coming into that node.</p>
-      <div class="formula" data-display data-tex="\pu{\frac{\partial E}{\partial w_{ij}}} = \frac{\partial x_j}{\partial w_{ij}}\, \am{\frac{\partial E}{\partial x_j}} = \rd{y_i}\, \am{\frac{\partial E}{\partial x_j}}"></div>
-    </section>
+        <section class="step" data-step="12">
+            <h2>Back propagation</h2>
+            <p>Now that we have <span class="imath" data-tex="\gr{\frac{dE}{dy}}"></span> we can get <span class="imath" data-tex="\am{\frac{dE}{dx}}"></span> using the chain rule.</p>
+            <div class="formula" data-display data-tex="\am{\frac{\partial E}{\partial x}} = \frac{dy}{dx}\, \gr{\frac{\partial E}{\partial y}} = \am{\frac{d}{dx}f(x)}\, \gr{\frac{\partial E}{\partial y}}"></div>
+            <p>where <span class="imath" data-tex="\frac{d}{dx}f(x) = f(x)\,(1 - f(x))"></span> when <span class="imath" data-tex="f(x)"></span> is the Sigmoid activation function.</p>
+        </section>
 
-    <section class="step" data-step="14">
-      <h2>Back propagation</h2>
-      <p>And using the chain rule, we can also get <span class="imath" data-tex="\gr{\frac{dE}{dy}}"></span> from the previous layer. We have made a full circle.</p>
-      <div class="formula" data-display data-tex="\gr{\frac{\partial E}{\partial y_i}} = \sum_{j \in \mathrm{out}(i)} \frac{\partial x_j}{\partial y_i}\, \am{\frac{\partial E}{\partial x_j}} = \sum_{j \in \mathrm{out}(i)} w_{ij}\, \am{\frac{\partial E}{\partial x_j}}"></div>
-    </section>
+        <section class="step" data-step="13">
+            <h2>Back propagation</h2>
+            <p>As soon as we have the error derivative with respect to the total input of a node, we can get the error derivative with respect to the weights coming into that node.</p>
+            <div class="formula" data-display data-tex="\pu{\frac{\partial E}{\partial w_{ij}}} = \frac{\partial x_j}{\partial w_{ij}}\, \am{\frac{\partial E}{\partial x_j}} = \rd{y_i}\, \am{\frac{\partial E}{\partial x_j}}"></div>
+        </section>
 
-    <section class="step" data-step="15">
-      <h2>Back propagation</h2>
-      <p>All that is left to do is repeat the previous three formulas until we have computed all the error derivatives.</p>
-    </section>
+        <section class="step" data-step="14">
+            <h2>Back propagation</h2>
+            <p>And using the chain rule, we can also get <span class="imath" data-tex="\gr{\frac{dE}{dy}}"></span> from the previous layer. We have made a full circle.</p>
+            <div class="formula" data-display data-tex="\gr{\frac{\partial E}{\partial y_i}} = \sum_{j \in \mathrm{out}(i)} \frac{\partial x_j}{\partial y_i}\, \am{\frac{\partial E}{\partial x_j}} = \sum_{j \in \mathrm{out}(i)} w_{ij}\, \am{\frac{\partial E}{\partial x_j}}"></div>
+        </section>
 
-    <section class="step" data-step="16">
-      <h2>The end.</h2>
-      <p>Feed the next example and repeat: forward pass &rarr; error &rarr; backward pass &rarr; update. Over many iterations the error shrinks and the network learns.</p>
-    </section>
+        <section class="step" data-step="15">
+            <h2>Back propagation</h2>
+            <p>All that is left to do is repeat the previous three formulas until we have computed all the error derivatives.</p>
+        </section>
 
-  </main>
+        <section class="step" data-step="16">
+            <h2>The end.</h2>
+            <p>Feed the next example and repeat: forward pass &rarr; error &rarr; backward pass &rarr; update. Over many iterations the error shrinks and the network learns.</p>
+        </section>
 
-  <script src="katex/katex.min.js"></script>
-  <script src="script.js"></script>
+        <footer class="site-footer">
+            <p>Inspired by Google's Machine Learning Crash Course.</p>
+            <p class="credit">Built by <strong><a href="https://www.linkedin.com/in/nayan-khanal/" target="_blank"> Nayan Khanal</a></strong></p>
+        </footer>
+
+    </main>
+
+    <script src="katex/katex.min.js"></script>
+    <script src="script.js"></script>
 </body>
+
 </html>
