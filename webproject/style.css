@@ -1,0 +1,105 @@
+:root {
+  --blue: #4a90d9;
+  --red: #e06666;
+  --green: #6aa84f;
+  --orange: #e69138;
+  --purple: #8e7cc3;
+  --ink: #222;
+  --muted: #666;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background: #fff;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Fixed graphic on the right half ---- */
+.graphic {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 46vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+#net {
+  width: 100%;
+  height: 94vh;
+}
+
+/* ---- Scrolling story on the left half ---- */
+.story {
+  width: 54vw;
+  padding: 0 5vw 0 7vw;
+}
+.step {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8vh 0;
+  opacity: 0.25;
+  transition: opacity 0.4s ease;
+}
+.step.active { opacity: 1; }
+
+h1 { font-size: 2.4rem; font-weight: 400; margin: 0 0 0.6em; }
+h2 { font-size: 2rem;   font-weight: 400; margin: 0 0 0.6em; }
+p  { font-size: 1.05rem; margin: 0 0 1em; max-width: 34em; }
+ul { font-size: 1.05rem; max-width: 34em; padding-left: 1.4em; }
+li { margin: 0.3em 0; }
+sub { font-size: 0.72em; }
+sup { font-size: 0.72em; }
+em { font-style: italic; }
+strong { font-weight: 600; }
+
+.hint { color: var(--muted); }
+.note { font-size: 0.9rem; color: var(--muted); }
+.formula {
+  margin: 0.8em 0 1.1em;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.formula .katex-display { text-align: left; margin: 0.3em 0; }
+.formula .katex { font-size: clamp(1rem, 1.9vw, 1.5em); }
+.imath .katex { font-size: 1.05em; }
+
+.k-blue   { color: var(--blue);   font-style: italic; }
+.k-red    { color: var(--red);    font-style: italic; }
+.k-green  { color: var(--green);  font-style: italic; }
+.k-orange { color: var(--orange); font-style: italic; }
+.k-purple { color: var(--purple); font-style: italic; }
+
+/* ---- SVG ---- */
+.seg { transition: fill 0.45s ease; }
+.edge { stroke: #b7b7b7; stroke-width: 1.5; fill: none; transition: stroke 0.4s ease, stroke-width 0.4s ease; }
+.edge.hi { stroke: #444; stroke-width: 2.5; }
+
+/* Pulsing highlight, mimics the original's blinking active element */
+.blink {
+  stroke: #000 !important;
+  stroke-width: 2.6 !important;
+  animation: blinkpulse 0.9s ease-in-out infinite;
+}
+@keyframes blinkpulse {
+  0%, 100% { stroke-opacity: 1; }
+  50%      { stroke-opacity: 0.18; }
+}
+
+/* Small-screen fallback: stack the graphic above the text */
+@media (max-width: 640px) {
+  .graphic { position: relative; width: 100%; height: 58vh; }
+  .story { width: 100%; padding: 0 6vw; }
+  #net { height: 54vh; }
+}
